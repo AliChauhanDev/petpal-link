@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import PetCard from "@/components/PetCard";
-import { Heart, Plus, Loader2 } from "lucide-react";
+import FilterBar, { FilterState } from "@/components/FilterBar";
+import ContactModal from "@/components/ContactModal";
+import { Heart, Plus, Loader2, Phone } from "lucide-react";
 import { format } from "date-fns";
 
 interface FoundReport {
@@ -27,6 +29,20 @@ export default function FoundPets() {
   const { user } = useAuth();
   const [reports, setReports] = useState<FoundReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    petType: "all",
+    sortBy: "newest",
+  });
+  const [contactModal, setContactModal] = useState<{
+    open: boolean;
+    contact: { name: string; phone: string; email?: string };
+    petName: string;
+  }>({
+    open: false,
+    contact: { name: "", phone: "" },
+    petName: "",
+  });
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -49,19 +65,67 @@ export default function FoundPets() {
     fetchReports();
   }, []);
 
+  const filteredReports = useMemo(() => {
+    let result = [...reports];
+
+    if (filters.petType !== "all") {
+      result = result.filter((r) => r.pet_type === filters.petType);
+    }
+
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(
+        (r) =>
+          r.pet_name?.toLowerCase().includes(searchLower) ||
+          r.description?.toLowerCase().includes(searchLower) ||
+          r.found_location.toLowerCase().includes(searchLower)
+      );
+    }
+
+    switch (filters.sortBy) {
+      case "oldest":
+        result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      case "name_asc":
+        result.sort((a, b) => (a.pet_name || "Unknown").localeCompare(b.pet_name || "Unknown"));
+        break;
+      case "name_desc":
+        result.sort((a, b) => (b.pet_name || "Unknown").localeCompare(a.pet_name || "Unknown"));
+        break;
+      default:
+        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    return result;
+  }, [reports, filters]);
+
+  const handleContact = (report: FoundReport) => {
+    setContactModal({
+      open: true,
+      contact: {
+        name: "Finder",
+        phone: report.contact_phone,
+        email: report.contact_email || undefined,
+      },
+      petName: report.pet_name || "Unknown Pet",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-teal-light rounded-xl flex items-center justify-center">
               <Heart className="w-7 h-7 text-teal" />
             </div>
             <div>
               <h1 className="text-3xl font-display font-bold text-foreground">Found Pets</h1>
-              <p className="text-muted-foreground">Pets looking for their owners</p>
+              <p className="text-muted-foreground">
+                {reports.length} pet{reports.length !== 1 ? "s" : ""} looking for their owners
+              </p>
             </div>
           </div>
           {user && (
@@ -95,31 +159,60 @@ export default function FoundPets() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reports.map((report, index) => (
-              <div key={report.id} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
-                <PetCard
-                  pet={{
-                    id: report.id,
-                    name: report.pet_name || "Unknown",
-                    pet_type: report.pet_type,
-                    description: report.description,
-                    image_url: report.image_url,
-                  }}
-                  variant="found"
-                  extraInfo={{
-                    location: report.found_location,
-                    contact: report.contact_phone,
-                    date: format(new Date(report.found_date), "MMM d, yyyy"),
-                  }}
-                />
+          <>
+            <FilterBar onFilterChange={setFilters} />
+            
+            {filteredReports.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No reports match your filters</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredReports.map((report, index) => (
+                  <div key={report.id} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                    <div className="bg-card rounded-2xl border-2 border-accent/50 overflow-hidden hover:shadow-lg transition-all">
+                      <PetCard
+                        pet={{
+                          id: report.id,
+                          name: report.pet_name || "Unknown",
+                          pet_type: report.pet_type,
+                          description: report.description,
+                          image_url: report.image_url,
+                        }}
+                        variant="found"
+                        extraInfo={{
+                          location: report.found_location,
+                          date: format(new Date(report.found_date), "MMM d, yyyy"),
+                        }}
+                      />
+                      <div className="px-5 pb-5">
+                        <Button 
+                          variant="teal" 
+                          className="w-full"
+                          onClick={() => handleContact(report)}
+                        >
+                          <Phone className="w-4 h-4" />
+                          Contact Finder
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 
       <Footer />
+
+      <ContactModal
+        open={contactModal.open}
+        onOpenChange={(open) => setContactModal((prev) => ({ ...prev, open }))}
+        contact={contactModal.contact}
+        petName={contactModal.petName}
+        variant="found"
+      />
     </div>
   );
 }

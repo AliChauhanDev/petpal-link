@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PetCard from "@/components/PetCard";
+import FilterBar, { FilterState } from "@/components/FilterBar";
 import { PawPrint, Plus, Loader2 } from "lucide-react";
 
 interface Pet {
@@ -28,6 +29,11 @@ export default function MyPets() {
   const { toast } = useToast();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    petType: "all",
+    sortBy: "newest",
+  });
 
   const fetchPets = async () => {
     if (!user) return;
@@ -75,6 +81,43 @@ export default function MyPets() {
     }
   };
 
+  const filteredPets = useMemo(() => {
+    let result = [...pets];
+
+    // Filter by pet type
+    if (filters.petType !== "all") {
+      result = result.filter((p) => p.pet_type === filters.petType);
+    }
+
+    // Filter by search term
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchLower) ||
+          p.breed?.toLowerCase().includes(searchLower) ||
+          p.description?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Sort
+    switch (filters.sortBy) {
+      case "oldest":
+        result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      case "name_asc":
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name_desc":
+        result.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      default:
+        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    return result;
+  }, [pets, filters]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -87,7 +130,9 @@ export default function MyPets() {
             </div>
             <div>
               <h1 className="text-3xl font-display font-bold text-foreground">My Pets</h1>
-              <p className="text-muted-foreground">Manage your registered pets</p>
+              <p className="text-muted-foreground">
+                {pets.length} pet{pets.length !== 1 ? "s" : ""} registered
+              </p>
             </div>
           </div>
           <Link to="/add-pet">
@@ -117,13 +162,23 @@ export default function MyPets() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pets.map((pet, index) => (
-              <div key={pet.id} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
-                <PetCard pet={pet} onDelete={handleDelete} showActions />
+          <>
+            <FilterBar onFilterChange={setFilters} />
+            
+            {filteredPets.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No pets match your filters</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPets.map((pet, index) => (
+                  <div key={pet.id} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                    <PetCard pet={pet} onDelete={handleDelete} showActions />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 

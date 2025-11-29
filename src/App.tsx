@@ -14,6 +14,9 @@ import FoundPets from "./pages/FoundPets";
 import ReportLost from "./pages/ReportLost";
 import ReportFound from "./pages/ReportFound";
 import SearchPets from "./pages/SearchPets";
+import PetDetail from "./pages/PetDetail";
+import EditPet from "./pages/EditPet";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -37,6 +40,9 @@ const App = () => (
             <Route path="/report-lost" element={<ProtectedRoute><ReportLost /></ProtectedRoute>} />
             <Route path="/report-found" element={<ProtectedRoute><ReportFound /></ProtectedRoute>} />
             <Route path="/search" element={<SearchPets />} />
+            <Route path="/pet/:id" element={<PetDetail />} />
+            <Route path="/edit-pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -1,6 +1,7 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PawPrint, Trash2, MapPin, Phone, Calendar, AlertTriangle } from "lucide-react";
+import { PawPrint, Trash2, MapPin, Phone, Calendar, AlertTriangle, Eye, Edit } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,7 @@ interface PetCardProps {
     date?: string;
     reward?: string;
   };
+  linkTo?: string;
 }
 
 const petTypeEmojis: Record<string, string> = {
@@ -47,12 +49,14 @@ const petTypeEmojis: Record<string, string> = {
   other: "🐾",
 };
 
-export default function PetCard({ pet, onDelete, showActions, variant = "default", extraInfo }: PetCardProps) {
+export default function PetCard({ pet, onDelete, showActions, variant = "default", extraInfo, linkTo }: PetCardProps) {
   const borderColor = variant === "lost" ? "border-destructive/50" : variant === "found" ? "border-accent/50" : "border-border";
   const badgeVariant = variant === "lost" ? "destructive" : variant === "found" ? "secondary" : "outline";
+  
+  const detailLink = linkTo || (variant === "default" ? `/pet/${pet.id}` : undefined);
 
-  return (
-    <div className={`bg-card rounded-2xl border-2 ${borderColor} overflow-hidden hover:shadow-lg transition-all group`}>
+  const CardContent = () => (
+    <>
       {/* Image */}
       <div className="relative h-48 bg-muted">
         {pet.image_url ? (
@@ -88,6 +92,15 @@ export default function PetCard({ pet, onDelete, showActions, variant = "default
               <AlertTriangle className="w-3 h-3 mr-1" />
               LOST
             </Badge>
+          </div>
+        )}
+
+        {/* Hover overlay for clickable cards */}
+        {detailLink && (
+          <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div className="bg-card/90 backdrop-blur-sm rounded-full p-3">
+              <Eye className="w-6 h-6 text-primary" />
+            </div>
           </div>
         )}
       </div>
@@ -162,6 +175,17 @@ export default function PetCard({ pet, onDelete, showActions, variant = "default
         {/* Actions */}
         {showActions && onDelete && (
           <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+            <Link to={`/pet/${pet.id}`} className="flex-1">
+              <Button variant="outline" size="sm" className="w-full">
+                <Eye className="w-4 h-4" />
+                View
+              </Button>
+            </Link>
+            <Link to={`/edit-pet/${pet.id}`}>
+              <Button variant="outline" size="sm">
+                <Edit className="w-4 h-4" />
+              </Button>
+            </Link>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
@@ -186,6 +210,20 @@ export default function PetCard({ pet, onDelete, showActions, variant = "default
           </div>
         )}
       </div>
+    </>
+  );
+
+  if (detailLink && !showActions) {
+    return (
+      <Link to={detailLink} className={`block bg-card rounded-2xl border-2 ${borderColor} overflow-hidden hover:shadow-lg transition-all group cursor-pointer`}>
+        <CardContent />
+      </Link>
+    );
+  }
+
+  return (
+    <div className={`bg-card rounded-2xl border-2 ${borderColor} overflow-hidden hover:shadow-lg transition-all group`}>
+      <CardContent />
     </div>
   );
 }
