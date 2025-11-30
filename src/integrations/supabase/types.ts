@@ -124,6 +124,160 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          read: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          link: string | null
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message: string
+          read?: boolean | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pet_images: {
+        Row: {
+          created_at: string
+          found_report_id: string | null
+          id: string
+          image_url: string
+          is_primary: boolean | null
+          lost_report_id: string | null
+          pet_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          found_report_id?: string | null
+          id?: string
+          image_url: string
+          is_primary?: boolean | null
+          lost_report_id?: string | null
+          pet_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          found_report_id?: string | null
+          id?: string
+          image_url?: string
+          is_primary?: boolean | null
+          lost_report_id?: string | null
+          pet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_images_found_report_id_fkey"
+            columns: ["found_report_id"]
+            isOneToOne: false
+            referencedRelation: "found_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_images_lost_report_id_fkey"
+            columns: ["lost_report_id"]
+            isOneToOne: false
+            referencedRelation: "lost_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_images_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pet_matches: {
+        Row: {
+          created_at: string
+          found_report_id: string
+          id: string
+          lost_report_id: string
+          match_score: number
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          found_report_id: string
+          id?: string
+          lost_report_id: string
+          match_score?: number
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          found_report_id?: string
+          id?: string
+          lost_report_id?: string
+          match_score?: number
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_matches_found_report_id_fkey"
+            columns: ["found_report_id"]
+            isOneToOne: false
+            referencedRelation: "found_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_matches_lost_report_id_fkey"
+            columns: ["lost_report_id"]
+            isOneToOne: false
+            referencedRelation: "lost_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pets: {
         Row: {
           age: string | null
@@ -205,14 +359,66 @@ export type Database = {
         }
         Relationships: []
       }
+      search_history: {
+        Row: {
+          created_at: string
+          filters: Json | null
+          id: string
+          search_query: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          search_query: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          search_query?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       pet_type: "dog" | "cat" | "bird" | "rabbit" | "fish" | "hamster" | "other"
     }
     CompositeTypes: {
@@ -341,6 +547,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       pet_type: ["dog", "cat", "bird", "rabbit", "fish", "hamster", "other"],
     },
   },
