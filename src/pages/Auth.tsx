@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { PawPrint, Mail, Lock, User, Loader2, ArrowLeft } from "lucide-react";
+import { PawPrint, Mail, Lock, User, Loader2, ArrowLeft, Phone } from "lucide-react";
 import { z } from "zod";
 
 const signInSchema = z.object({
@@ -15,6 +15,7 @@ const signInSchema = z.object({
 
 const signUpSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(50, "Name is too long"),
+  phone: z.string().min(10, "Please enter a valid phone number").max(15, "Phone number is too long"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
@@ -28,6 +29,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
+    phone: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -66,7 +68,7 @@ export default function Auth() {
         }
 
         setLoading(true);
-        const { error } = await signUp(formData.email, formData.password, formData.fullName);
+        const { error } = await signUp(formData.email, formData.password, formData.fullName, formData.phone);
         if (error) {
           if (error.message.includes("already registered")) {
             toast({
@@ -140,23 +142,44 @@ export default function Auth() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  Full Name
-                </Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  placeholder="John Doe"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className={errors.fullName ? "border-destructive" : ""}
-                />
-                {errors.fullName && (
-                  <p className="text-sm text-destructive">{errors.fullName}</p>
-                )}
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    Full Name
+                  </Label>
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    placeholder="John Doe"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    className={errors.fullName ? "border-destructive" : ""}
+                  />
+                  {errors.fullName && (
+                    <p className="text-sm text-destructive">{errors.fullName}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="+1 234 567 8900"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className={errors.phone ? "border-destructive" : ""}
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-destructive">{errors.phone}</p>
+                  )}
+                </div>
+              </>
             )}
 
             <div className="space-y-2">
