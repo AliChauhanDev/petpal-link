@@ -24,6 +24,7 @@ interface LostReport {
   status: string;
   reward: string | null;
   created_at: string;
+  user_id: string;
 }
 
 export default function LostPets() {
@@ -45,6 +46,8 @@ export default function LostPets() {
     petName: "",
   });
 
+  const [ownerProfiles, setOwnerProfiles] = useState<Record<string, string>>({});
+
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -56,6 +59,23 @@ export default function LostPets() {
 
         if (error) throw error;
         setReports(data || []);
+
+        // Fetch owner profiles for names
+        if (data && data.length > 0) {
+          const userIds = [...new Set(data.map(r => r.user_id))];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, full_name")
+            .in("user_id", userIds);
+          
+          if (profiles) {
+            const profileMap: Record<string, string> = {};
+            profiles.forEach(p => {
+              profileMap[p.user_id] = p.full_name || "Pet Owner";
+            });
+            setOwnerProfiles(profileMap);
+          }
+        }
       } catch (error) {
         console.error("Error fetching lost reports:", error);
       } finally {
@@ -104,9 +124,8 @@ export default function LostPets() {
     setContactModal({
       open: true,
       contact: {
-        name: "Pet Owner",
+        name: ownerProfiles[report.user_id] || "Pet Owner",
         phone: report.contact_phone,
-        email: report.contact_email || undefined,
       },
       petName: report.pet_name,
     });

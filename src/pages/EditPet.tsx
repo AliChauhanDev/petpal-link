@@ -82,6 +82,7 @@ export default function EditPet() {
           image_url: data.image_url || "",
           is_lost: data.is_lost || false,
         });
+        setOriginalIsLost(data.is_lost || false);
         setImagePreview(data.image_url);
       } catch (error) {
         console.error("Error fetching pet:", error);
@@ -119,6 +120,8 @@ export default function EditPet() {
     setImagePreview(null);
     setFormData(prev => ({ ...prev, image_url: "" }));
   };
+
+  const [originalIsLost, setOriginalIsLost] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,6 +165,40 @@ export default function EditPet() {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Auto-create lost report if pet was just marked as lost
+      if (formData.is_lost && !originalIsLost) {
+        // Get user profile for contact info
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("phone, full_name")
+          .eq("user_id", user.id)
+          .single();
+
+        const { error: reportError } = await supabase
+          .from("lost_reports")
+          .insert({
+            user_id: user.id,
+            pet_id: id,
+            pet_name: formData.name,
+            pet_type: formData.pet_type,
+            description: formData.description || `Lost ${formData.pet_type}: ${formData.name}`,
+            last_seen_location: "Please update location",
+            last_seen_date: new Date().toISOString().split("T")[0],
+            contact_phone: profile?.phone || "No phone provided",
+            image_url: imageUrl || null,
+            status: "active",
+          });
+
+        if (reportError) {
+          console.error("Error creating lost report:", reportError);
+        } else {
+          toast({
+            title: "Lost Report Created",
+            description: `A lost report for ${formData.name} has been automatically created. Please update the location details.`,
+          });
+        }
+      }
 
       toast({
         title: "Success!",

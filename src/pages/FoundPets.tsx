@@ -23,6 +23,7 @@ interface FoundReport {
   image_url: string | null;
   status: string;
   created_at: string;
+  user_id: string;
 }
 
 export default function FoundPets() {
@@ -36,13 +37,14 @@ export default function FoundPets() {
   });
   const [contactModal, setContactModal] = useState<{
     open: boolean;
-    contact: { name: string; phone: string; email?: string };
+    contact: { name: string; phone: string };
     petName: string;
   }>({
     open: false,
     contact: { name: "", phone: "" },
     petName: "",
   });
+  const [finderProfiles, setFinderProfiles] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -55,6 +57,23 @@ export default function FoundPets() {
 
         if (error) throw error;
         setReports(data || []);
+
+        // Fetch finder profiles for names
+        if (data && data.length > 0) {
+          const userIds = [...new Set(data.map(r => r.user_id))];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, full_name")
+            .in("user_id", userIds);
+          
+          if (profiles) {
+            const profileMap: Record<string, string> = {};
+            profiles.forEach(p => {
+              profileMap[p.user_id] = p.full_name || "Finder";
+            });
+            setFinderProfiles(profileMap);
+          }
+        }
       } catch (error) {
         console.error("Error fetching found reports:", error);
       } finally {
@@ -103,9 +122,8 @@ export default function FoundPets() {
     setContactModal({
       open: true,
       contact: {
-        name: "Finder",
+        name: finderProfiles[report.user_id] || "Finder",
         phone: report.contact_phone,
-        email: report.contact_email || undefined,
       },
       petName: report.pet_name || "Unknown Pet",
     });
