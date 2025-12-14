@@ -14,8 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_history: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experience_likes: {
+        Row: {
+          created_at: string
+          experience_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          experience_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          experience_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experience_likes_experience_id_fkey"
+            columns: ["experience_id"]
+            isOneToOne: false
+            referencedRelation: "shared_experiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       found_reports: {
         Row: {
+          breed: string | null
+          color: string | null
           contact_email: string | null
           contact_phone: string
           created_at: string
@@ -23,14 +110,15 @@ export type Database = {
           found_date: string
           found_location: string
           id: string
-          image_url: string | null
-          pet_name: string | null
+          images: string[] | null
           pet_type: Database["public"]["Enums"]["pet_type"]
-          status: string | null
+          status: Database["public"]["Enums"]["report_status"] | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          breed?: string | null
+          color?: string | null
           contact_email?: string | null
           contact_phone: string
           created_at?: string
@@ -38,14 +126,15 @@ export type Database = {
           found_date: string
           found_location: string
           id?: string
-          image_url?: string | null
-          pet_name?: string | null
+          images?: string[] | null
           pet_type: Database["public"]["Enums"]["pet_type"]
-          status?: string | null
+          status?: Database["public"]["Enums"]["report_status"] | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          breed?: string | null
+          color?: string | null
           contact_email?: string | null
           contact_phone?: string
           created_at?: string
@@ -53,10 +142,9 @@ export type Database = {
           found_date?: string
           found_location?: string
           id?: string
-          image_url?: string | null
-          pet_name?: string | null
+          images?: string[] | null
           pet_type?: Database["public"]["Enums"]["pet_type"]
-          status?: string | null
+          status?: Database["public"]["Enums"]["report_status"] | null
           updated_at?: string
           user_id?: string
         }
@@ -64,90 +152,61 @@ export type Database = {
       }
       lost_reports: {
         Row: {
+          age: string | null
+          breed: string | null
+          color: string | null
           contact_email: string | null
           contact_phone: string
           created_at: string
           description: string | null
           id: string
-          image_url: string | null
+          images: string[] | null
           last_seen_date: string
           last_seen_location: string
-          pet_id: string | null
           pet_name: string
           pet_type: Database["public"]["Enums"]["pet_type"]
           reward: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["report_status"] | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          age?: string | null
+          breed?: string | null
+          color?: string | null
           contact_email?: string | null
           contact_phone: string
           created_at?: string
           description?: string | null
           id?: string
-          image_url?: string | null
+          images?: string[] | null
           last_seen_date: string
           last_seen_location: string
-          pet_id?: string | null
           pet_name: string
           pet_type: Database["public"]["Enums"]["pet_type"]
           reward?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["report_status"] | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          age?: string | null
+          breed?: string | null
+          color?: string | null
           contact_email?: string | null
           contact_phone?: string
           created_at?: string
           description?: string | null
           id?: string
-          image_url?: string | null
+          images?: string[] | null
           last_seen_date?: string
           last_seen_location?: string
-          pet_id?: string | null
           pet_name?: string
           pet_type?: Database["public"]["Enums"]["pet_type"]
           reward?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["report_status"] | null
           updated_at?: string
           user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lost_reports_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          read: boolean | null
-          receiver_id: string
-          sender_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          read?: boolean | null
-          receiver_id: string
-          sender_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          read?: boolean | null
-          receiver_id?: string
-          sender_id?: string
         }
         Relationships: []
       }
@@ -159,7 +218,7 @@ export type Database = {
           message: string
           read: boolean | null
           title: string
-          type: string
+          type: string | null
           user_id: string
         }
         Insert: {
@@ -169,7 +228,7 @@ export type Database = {
           message: string
           read?: boolean | null
           title: string
-          type?: string
+          type?: string | null
           user_id: string
         }
         Update: {
@@ -179,62 +238,204 @@ export type Database = {
           message?: string
           read?: boolean | null
           title?: string
-          type?: string
+          type?: string | null
           user_id?: string
         }
         Relationships: []
       }
-      pet_images: {
+      order_items: {
         Row: {
           created_at: string
-          found_report_id: string | null
           id: string
-          image_url: string
-          is_primary: boolean | null
-          lost_report_id: string | null
-          pet_id: string | null
+          order_id: string
+          product_id: string | null
+          product_name: string
+          product_price: number
+          quantity: number
         }
         Insert: {
           created_at?: string
-          found_report_id?: string | null
           id?: string
-          image_url: string
-          is_primary?: boolean | null
-          lost_report_id?: string | null
-          pet_id?: string | null
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          product_price: number
+          quantity: number
         }
         Update: {
           created_at?: string
-          found_report_id?: string | null
           id?: string
-          image_url?: string
-          is_primary?: boolean | null
-          lost_report_id?: string | null
-          pet_id?: string | null
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          product_price?: number
+          quantity?: number
         }
         Relationships: [
           {
-            foreignKeyName: "pet_images_found_report_id_fkey"
-            columns: ["found_report_id"]
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
             isOneToOne: false
-            referencedRelation: "found_reports"
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pet_images_lost_report_id_fkey"
-            columns: ["lost_report_id"]
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "lost_reports"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_images_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          shipping_address: string | null
+          shipping_city: string | null
+          shipping_phone: string | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          store_id: string | null
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_phone?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          store_id?: string | null
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_phone?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          store_id?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pet_diseases: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          pet_type: Database["public"]["Enums"]["pet_type"]
+          prevention: string | null
+          symptoms: string[] | null
+          when_to_seek_help: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          pet_type: Database["public"]["Enums"]["pet_type"]
+          prevention?: string | null
+          symptoms?: string[] | null
+          when_to_seek_help?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          pet_type?: Database["public"]["Enums"]["pet_type"]
+          prevention?: string | null
+          symptoms?: string[] | null
+          when_to_seek_help?: string | null
+        }
+        Relationships: []
+      }
+      pet_guides: {
+        Row: {
+          age_group: string | null
+          category: string
+          content: string
+          created_at: string
+          gender: string | null
+          id: string
+          image_url: string | null
+          pet_type: Database["public"]["Enums"]["pet_type"]
+          title: string
+        }
+        Insert: {
+          age_group?: string | null
+          category: string
+          content: string
+          created_at?: string
+          gender?: string | null
+          id?: string
+          image_url?: string | null
+          pet_type: Database["public"]["Enums"]["pet_type"]
+          title: string
+        }
+        Update: {
+          age_group?: string | null
+          category?: string
+          content?: string
+          created_at?: string
+          gender?: string | null
+          id?: string
+          image_url?: string | null
+          pet_type?: Database["public"]["Enums"]["pet_type"]
+          title?: string
+        }
+        Relationships: []
+      }
+      pet_love: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          pet_type: Database["public"]["Enums"]["pet_type"]
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          pet_type: Database["public"]["Enums"]["pet_type"]
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          pet_type?: Database["public"]["Enums"]["pet_type"]
+          title?: string
+        }
+        Relationships: []
       }
       pet_matches: {
         Row: {
@@ -242,7 +443,8 @@ export type Database = {
           found_report_id: string
           id: string
           lost_report_id: string
-          match_score: number
+          match_score: number | null
+          notified: boolean | null
           status: string | null
         }
         Insert: {
@@ -250,7 +452,8 @@ export type Database = {
           found_report_id: string
           id?: string
           lost_report_id: string
-          match_score?: number
+          match_score?: number | null
+          notified?: boolean | null
           status?: string | null
         }
         Update: {
@@ -258,7 +461,8 @@ export type Database = {
           found_report_id?: string
           id?: string
           lost_report_id?: string
-          match_score?: number
+          match_score?: number | null
+          notified?: boolean | null
           status?: string | null
         }
         Relationships: [
@@ -278,59 +482,139 @@ export type Database = {
           },
         ]
       }
-      pets: {
+      pets_info: {
         Row: {
-          age: string | null
-          breed: string | null
-          color: string | null
+          animal_name: string
+          can_keep: boolean
           created_at: string
-          description: string | null
-          gender: string | null
+          ethical_notes: string | null
           id: string
           image_url: string | null
-          is_lost: boolean | null
-          name: string
-          pet_type: Database["public"]["Enums"]["pet_type"]
-          updated_at: string
-          user_id: string
+          legal_notes: string | null
+          reason: string | null
         }
         Insert: {
-          age?: string | null
-          breed?: string | null
-          color?: string | null
+          animal_name: string
+          can_keep: boolean
           created_at?: string
-          description?: string | null
-          gender?: string | null
+          ethical_notes?: string | null
           id?: string
           image_url?: string | null
-          is_lost?: boolean | null
-          name: string
-          pet_type?: Database["public"]["Enums"]["pet_type"]
-          updated_at?: string
-          user_id: string
+          legal_notes?: string | null
+          reason?: string | null
         }
         Update: {
-          age?: string | null
-          breed?: string | null
-          color?: string | null
+          animal_name?: string
+          can_keep?: boolean
           created_at?: string
-          description?: string | null
-          gender?: string | null
+          ethical_notes?: string | null
           id?: string
           image_url?: string | null
-          is_lost?: boolean | null
-          name?: string
-          pet_type?: Database["public"]["Enums"]["pet_type"]
-          updated_at?: string
-          user_id?: string
+          legal_notes?: string | null
+          reason?: string | null
         }
         Relationships: []
+      }
+      product_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          pet_type: Database["public"]["Enums"]["pet_type"] | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category_id: string | null
+          compare_price: number | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          is_approved: boolean | null
+          name: string
+          pet_type: Database["public"]["Enums"]["pet_type"] | null
+          price: number
+          stock_quantity: number | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          compare_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          name: string
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
+          price: number
+          stock_quantity?: number | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          compare_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          name?: string
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
+          price?: number
+          stock_quantity?: number | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "seller_stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           address: string | null
           avatar_url: string | null
+          city: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -340,7 +624,9 @@ export type Database = {
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -350,7 +636,9 @@ export type Database = {
         Update: {
           address?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -359,26 +647,89 @@ export type Database = {
         }
         Relationships: []
       }
-      search_history: {
+      seller_stores: {
         Row: {
+          address: string | null
+          banner_url: string | null
+          city: string | null
           created_at: string
-          filters: Json | null
+          description: string | null
+          email: string | null
           id: string
-          search_query: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          logo_url: string | null
+          phone: string | null
+          store_name: string
+          updated_at: string
           user_id: string
         }
         Insert: {
+          address?: string | null
+          banner_url?: string | null
+          city?: string | null
           created_at?: string
-          filters?: Json | null
+          description?: string | null
+          email?: string | null
           id?: string
-          search_query: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          phone?: string | null
+          store_name: string
+          updated_at?: string
           user_id: string
         }
         Update: {
+          address?: string | null
+          banner_url?: string | null
+          city?: string | null
           created_at?: string
-          filters?: Json | null
+          description?: string | null
+          email?: string | null
           id?: string
-          search_query?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          phone?: string | null
+          store_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shared_experiences: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          images: string[] | null
+          likes_count: number | null
+          pet_type: Database["public"]["Enums"]["pet_type"] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          likes_count?: number | null
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          likes_count?: number | null
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
+          title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -418,8 +769,23 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
-      pet_type: "dog" | "cat" | "bird" | "rabbit" | "fish" | "hamster" | "other"
+      app_role: "user" | "seller" | "admin"
+      order_status:
+        | "pending"
+        | "confirmed"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
+      pet_type:
+        | "dog"
+        | "cat"
+        | "bird"
+        | "rabbit"
+        | "fish"
+        | "hamster"
+        | "reptile"
+        | "other"
+      report_status: "active" | "resolved" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -547,8 +913,25 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
-      pet_type: ["dog", "cat", "bird", "rabbit", "fish", "hamster", "other"],
+      app_role: ["user", "seller", "admin"],
+      order_status: [
+        "pending",
+        "confirmed",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+      pet_type: [
+        "dog",
+        "cat",
+        "bird",
+        "rabbit",
+        "fish",
+        "hamster",
+        "reptile",
+        "other",
+      ],
+      report_status: ["active", "resolved", "expired"],
     },
   },
 } as const
