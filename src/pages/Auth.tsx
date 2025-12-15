@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { PawPrint, Mail, Lock, User, Loader2, ArrowLeft, Phone } from "lucide-react";
+import { Mail, Lock, User, Loader2, ArrowLeft, Phone } from "lucide-react";
 import { z } from "zod";
 
 const signInSchema = z.object({
@@ -85,7 +85,7 @@ export default function Auth() {
           }
         } else {
           toast({
-            title: "Welcome to PetLink!",
+            title: "Welcome to PetVerse!",
             description: "Your account has been created successfully.",
           });
         }
@@ -127,16 +127,16 @@ export default function Auth() {
 
         <div className="bg-card rounded-2xl shadow-lg p-8 border border-border animate-scale-in">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <PawPrint className="w-8 h-8 text-primary-foreground" />
+            <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🐾</span>
             </div>
-            <h1 className="text-2xl font-display font-bold text-foreground">
+            <h1 className="text-2xl font-heading font-bold text-foreground">
               {isSignUp ? "Create Account" : "Welcome Back"}
             </h1>
             <p className="text-muted-foreground mt-2">
               {isSignUp
-                ? "Join PetLink and start protecting your pets"
-                : "Sign in to your PetLink account"}
+                ? "Join PetVerse and explore the pet ecosystem"
+                : "Sign in to your PetVerse account"}
             </p>
           </div>
 
@@ -243,7 +243,6 @@ export default function Auth() {
 
             <Button
               type="submit"
-              variant="hero"
               className="w-full"
               size="lg"
               disabled={loading}
@@ -254,10 +253,7 @@ export default function Auth() {
                   {isSignUp ? "Creating Account..." : "Signing In..."}
                 </>
               ) : (
-                <>
-                  <PawPrint className="w-4 h-4" />
-                  {isSignUp ? "Create Account" : "Sign In"}
-                </>
+                isSignUp ? "Create Account" : "Sign In"
               )}
             </Button>
           </form>

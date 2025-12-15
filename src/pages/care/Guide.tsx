@@ -6,6 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingPage } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookOpen } from "lucide-react";
+import { Database } from "@/integrations/supabase/types";
+
+type PetType = Database["public"]["Enums"]["pet_type"];
 
 const Guide = () => {
   const [guides, setGuides] = useState<any[]>([]);
@@ -17,8 +20,11 @@ const Guide = () => {
   }, [petType]);
 
   const fetchGuides = async () => {
+    setLoading(true);
     let query = supabase.from("pet_guides").select("*");
-    if (petType !== "all") query = query.eq("pet_type", petType);
+    if (petType !== "all") {
+      query = query.eq("pet_type", petType as PetType);
+    }
     
     const { data } = await query;
     setGuides(data || []);
@@ -41,12 +47,16 @@ const Guide = () => {
               <SelectItem value="dog">Dogs</SelectItem>
               <SelectItem value="cat">Cats</SelectItem>
               <SelectItem value="bird">Birds</SelectItem>
+              <SelectItem value="rabbit">Rabbits</SelectItem>
+              <SelectItem value="fish">Fish</SelectItem>
+              <SelectItem value="hamster">Hamsters</SelectItem>
+              <SelectItem value="reptile">Reptiles</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {guides.length === 0 ? (
-          <EmptyState icon={<BookOpen className="w-16 h-16" />} title="No Guides Found" />
+          <EmptyState icon={<BookOpen className="w-16 h-16" />} title="No Guides Found" description="Check back later for helpful pet care guides." />
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
             {guides.map((guide) => (
@@ -58,10 +68,12 @@ const Guide = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{guide.content}</p>
-                  <div className="mt-4 flex gap-2">
-                    <span className="text-xs px-2 py-1 rounded-full bg-muted">{guide.pet_type}</span>
+                  <p className="text-muted-foreground whitespace-pre-wrap">{guide.content}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="text-xs px-2 py-1 rounded-full bg-muted capitalize">{guide.pet_type}</span>
+                    {guide.category && <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">{guide.category}</span>}
                     {guide.age_group && <span className="text-xs px-2 py-1 rounded-full bg-muted">{guide.age_group}</span>}
+                    {guide.gender && <span className="text-xs px-2 py-1 rounded-full bg-muted capitalize">{guide.gender}</span>}
                   </div>
                 </CardContent>
               </Card>
