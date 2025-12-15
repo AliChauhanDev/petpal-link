@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,43 +7,51 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Phone, MapPin, Loader2, Save, Camera } from "lucide-react";
+import { LoadingPage } from "@/components/ui/loading";
+import { User, Mail, Phone, MapPin, Loader2, Save, Camera, Store, AlertTriangle, Heart } from "lucide-react";
 
 export default function Profile() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState({ lostReports: 0, foundReports: 0, orders: 0 });
   const [formData, setFormData] = useState({
     full_name: "",
     phone: "",
     address: "",
+    city: "",
     avatar_url: "",
   });
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       if (!user) return;
 
       try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
+        const [profileResult, lostResult, foundResult, ordersResult] = await Promise.all([
+          supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+          supabase.from("lost_reports").select("id", { count: "exact" }).eq("user_id", user.id),
+          supabase.from("found_reports").select("id", { count: "exact" }).eq("user_id", user.id),
+          supabase.from("orders").select("id", { count: "exact" }).eq("user_id", user.id),
+        ]);
 
-        if (error) throw error;
-        
-        if (data) {
+        if (profileResult.data) {
           setFormData({
-            full_name: data.full_name || "",
-            phone: data.phone || "",
-            address: data.address || "",
-            avatar_url: data.avatar_url || "",
+            full_name: profileResult.data.full_name || "",
+            phone: profileResult.data.phone || "",
+            address: profileResult.data.address || "",
+            city: profileResult.data.city || "",
+            avatar_url: profileResult.data.avatar_url || "",
           });
         }
+
+        setStats({
+          lostReports: lostResult.count || 0,
+          foundReports: foundResult.count || 0,
+          orders: ordersResult.count || 0,
+        });
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -53,7 +59,7 @@ export default function Profile() {
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,6 +75,7 @@ export default function Profile() {
           full_name: formData.full_name || null,
           phone: formData.phone || null,
           address: formData.address || null,
+          city: formData.city || null,
         })
         .eq("user_id", user.id);
 
@@ -90,26 +97,17 @@ export default function Profile() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        </div>
-      </div>
-    );
+    return <LoadingPage message="Loading profile..." />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-
-      <main className="container mx-auto px-4 py-8">
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="relative inline-block">
-              <div className="w-28 h-28 bg-gradient-primary rounded-full flex items-center justify-center mx-auto">
+              <div className="w-28 h-28 gradient-primary rounded-full flex items-center justify-center mx-auto">
                 {formData.avatar_url ? (
                   <img 
                     src={formData.avatar_url} 
@@ -117,14 +115,14 @@ export default function Profile() {
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <User className="w-14 h-14 text-primary-foreground" />
+                  <User className="w-14 h-14 text-white" />
                 )}
               </div>
               <button className="absolute bottom-0 right-0 w-10 h-10 bg-card border border-border rounded-full flex items-center justify-center hover:bg-muted transition-colors">
                 <Camera className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
-            <h1 className="text-3xl font-display font-bold text-foreground mt-4">
+            <h1 className="text-3xl font-heading font-bold text-foreground mt-4">
               My Profile
             </h1>
             <p className="text-muted-foreground">{user?.email}</p>
@@ -172,21 +170,34 @@ export default function Profile() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                Address
-              </Label>
-              <Textarea
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Enter your address"
-                rows={3}
-              />
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city" className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  City
+                </Label>
+                <Input
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  placeholder="Your city"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address" className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  Address
+                </Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Street address"
+                />
+              </div>
             </div>
 
-            <Button type="submit" variant="hero" className="w-full" disabled={saving}>
+            <Button type="submit" className="w-full" disabled={saving}>
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -203,23 +214,24 @@ export default function Profile() {
 
           {/* Stats */}
           <div className="mt-8 grid grid-cols-3 gap-4 animate-fade-in">
-            <div className="bg-card rounded-xl border border-border p-4 text-center">
-              <p className="text-2xl font-display font-bold text-primary">0</p>
-              <p className="text-sm text-muted-foreground">Pets</p>
+            <div className="bg-card rounded-xl border border-border p-4 text-center hover-lift">
+              <Store className="w-6 h-6 text-store-primary mx-auto mb-2" />
+              <p className="text-2xl font-heading font-bold text-foreground">{stats.orders}</p>
+              <p className="text-sm text-muted-foreground">Orders</p>
             </div>
-            <div className="bg-card rounded-xl border border-border p-4 text-center">
-              <p className="text-2xl font-display font-bold text-amber">0</p>
+            <div className="bg-card rounded-xl border border-border p-4 text-center hover-lift">
+              <AlertTriangle className="w-6 h-6 text-amber mx-auto mb-2" />
+              <p className="text-2xl font-heading font-bold text-foreground">{stats.lostReports}</p>
               <p className="text-sm text-muted-foreground">Lost Reports</p>
             </div>
-            <div className="bg-card rounded-xl border border-border p-4 text-center">
-              <p className="text-2xl font-display font-bold text-teal">0</p>
+            <div className="bg-card rounded-xl border border-border p-4 text-center hover-lift">
+              <Heart className="w-6 h-6 text-care-primary mx-auto mb-2" />
+              <p className="text-2xl font-heading font-bold text-foreground">{stats.foundReports}</p>
               <p className="text-sm text-muted-foreground">Found Reports</p>
             </div>
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </MainLayout>
   );
 }
